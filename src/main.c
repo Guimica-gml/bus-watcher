@@ -24,7 +24,7 @@ typedef struct sockaddr_in SOCKADDR_IN;
 #define ARENA_IMPLEMENTATION
 #include "./arena.h"
 
-#define URL "api.olhovivo.sptrans.com.br"
+const char *host_url = "api.olhovivo.sptrans.com.br";
 
 typedef struct {
     String header;
@@ -110,7 +110,7 @@ bool authenticate(SOCKET sock, Arena *arena, String *cookie) {
 
     String request = {0};
     str_append_fmt(arena, &request, "POST /v2.1/Login/Autenticar?token=%.*s HTTP/1.1\r\n", (int)token.count, token.items);
-    str_append_fmt(arena, &request, "Host: %s\r\n", URL);
+    str_append_fmt(arena, &request, "Host: %s\r\n", host_url);
     str_append_fmt(arena, &request, "Connection: keep-alive\r\n");
     str_append_fmt(arena, &request, "Content-Type: application/json; charset=utf-8\r\n");
     str_append_fmt(arena, &request, "Content-Length: 0\r\n");
@@ -148,7 +148,7 @@ int main(void) {
         exit(1);
     }
 
-    struct hostent *host = gethostbyname(URL);
+    struct hostent *host = gethostbyname(host_url);
     if (host == NULL) {
         fprintf(stderr, "Error: Could not get host\n");
         exit(1);
@@ -170,26 +170,25 @@ int main(void) {
     bool could_auth = authenticate(sock, &arena, &cookie);
     assert(could_auth);
 
-    {
-        String request = {0};
-        str_append_fmt(&arena, &request, "GET /v2.1/Linha/Buscar?termosBusca=2552 HTTP/1.1\r\n");
-        str_append_fmt(&arena, &request, "Host: %s\r\n", URL);
-        str_append_fmt(&arena, &request, "Connection: keep-alive\r\n");
-        str_append_fmt(&arena, &request, "Cookie: %.*s\r\n", (int) cookie.count, cookie.items);
-        str_append_fmt(&arena, &request, "Content-Type: application/json; charset=utf-8\r\n");
-        str_append_fmt(&arena, &request, "Content-Length: 0\r\n");
-        str_append_fmt(&arena, &request, "\r\n");
+    String request = {0};
+    str_append_fmt(&arena, &request, "GET /v2.1/Linha/Buscar?termosBusca=2552 HTTP/1.1\r\n");
+    str_append_fmt(&arena, &request, "Host: %s\r\n", host_url);
+    str_append_fmt(&arena, &request, "Connection: keep-alive\r\n");
+    str_append_fmt(&arena, &request, "Cookie: %.*s\r\n", (int) cookie.count, cookie.items);
+    str_append_fmt(&arena, &request, "Content-Type: application/json; charset=utf-8\r\n");
+    str_append_fmt(&arena, &request, "Content-Length: 0\r\n");
+    str_append_fmt(&arena, &request, "\r\n");
 
-        Answer answer = make_request(sock, &arena, &request);
-        Json_Object json = {0};
-        Json_Result result = json_parse(
-            &arena, &json,
-            answer.payload.items, answer.payload.count
-        );
-        assert(!result.failed);
-        json_print_obj(&json);
-        printf("\n");
-    }
+    Answer answer = make_request(sock, &arena, &request);
+    Json_Object json = {0};
+    Json_Result result = json_parse(
+        &arena, &json,
+        answer.payload.items, answer.payload.count
+    );
+    assert(!result.failed);
+
+    json_print_obj(&json);
+    printf("\n");
 
     shutdown(sock, SD_BOTH);
     closesocket(sock);

@@ -45,6 +45,8 @@ const char *json_token_kind_to_cstr(Json_Token_Kind kind) {
     case JSON_TOKEN_STRING: return "string";
     default: assert(0 && "unreachable");
     }
+    // NOTE(nic): unreachable, but cl.exe still complains
+    exit(1);
 }
 
 String_View json_lexer_consume_chars(Json_Lexer *lexer, size_t count) {
@@ -213,7 +215,7 @@ void json_print_obj(Json_Object *obj) {
         printf("%s", (obj->as.boolean) ? "true" : "false");
         break;
     case JSON_OBJ_INT64:
-        printf("%ld", obj->as.int64);
+        printf("%lld", obj->as.int64);
         break;
     case JSON_OBJ_DECIMAL:
         printf("%lf", obj->as.decimal);
@@ -416,6 +418,8 @@ bool json_obj_eq(Json_Object *a, Json_Object *b) {
     case JSON_OBJ_STRING:  return str_eq(&a->as.string, &b->as.string);
     default: assert(0 && "unreachable");
     }
+    // NOTE(nic): unreachable, but cl.exe still complains
+    exit(1);
 }
 
 Json_Object *json_dict_get(Json_Dict *dict, Json_Object key) {
